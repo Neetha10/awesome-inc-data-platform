@@ -157,4 +157,46 @@ WHERE NOT EXISTS (SELECT 1 FROM NS_CUSTOMER c WHERE c.ROW_ID = o.CUSTOMER_ROW_ID
 
 -- Order details without valid order
 SELECT COUNT(*) AS ORPHANED_ORDER_DETAILS
-FROM NS_ORDER
+FROM NS_ORDER_DETAIL od
+WHERE NOT EXISTS (SELECT 1 FROM NS_ORDER o WHERE o.ROW_ID = od.ORDER_ROW_ID);
+
+-- Order details without valid product
+SELECT COUNT(*) AS ORPHANED_PRODUCTS
+FROM NS_ORDER_DETAIL od
+WHERE NOT EXISTS (SELECT 1 FROM NS_PRODUCT p WHERE p.ROW_ID = od.PRODUCT_ROW_ID);
+
+-- ============================================================================
+-- 13. CHECK FOR NEGATIVE PROFIT
+-- ============================================================================
+SELECT 
+    COUNT(*) AS NEGATIVE_PROFIT_COUNT,
+    SUM(PROFIT) AS TOTAL_NEGATIVE_PROFIT
+FROM NS_ORDER_DETAIL
+WHERE PROFIT < 0;
+
+-- ============================================================================
+-- 14. SALES SUMMARY
+-- ============================================================================
+SELECT 
+    'Total Sales' AS METRIC,
+    CONCAT('$', FORMAT(SUM(SALES), 2)) AS VALUE
+FROM NS_ORDER_DETAIL
+UNION ALL
+SELECT 
+    'Total Profit',
+    CONCAT('$', FORMAT(SUM(PROFIT), 2))
+FROM NS_ORDER_DETAIL
+UNION ALL
+SELECT 
+    'Total Orders',
+    FORMAT(COUNT(DISTINCT ORDER_ROW_ID), 0)
+FROM NS_ORDER_DETAIL
+UNION ALL
+SELECT 
+    'Average Order Value',
+    CONCAT('$', FORMAT(AVG(SALES), 2))
+FROM NS_ORDER_DETAIL;
+
+-- ============================================================================
+-- END OF VALIDATION QUERIES
+-- ============================================================================
